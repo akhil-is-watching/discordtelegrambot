@@ -1,13 +1,8 @@
 import { getStoredToken } from "@/lib/auth/storage";
 import { ApiError } from "@/lib/api/errors";
 
-// Must be a literal `process.env.X` reference — Bun's client bundler only inlines
-// literal references, not `import.meta.env` or indirect access through a variable.
-// When the var isn't set at bundle time (no .env present), Bun leaves the raw
-// `process.env...` expression in the client bundle, and `process` doesn't exist in
-// the browser — so the whole expression must stay behind a `typeof process` guard
-// (safe on undeclared globals) rather than referencing `process` directly.
-const API_BASE_URL = typeof process !== "undefined" ? (process.env.BUN_PUBLIC_API_URL ?? "") : "";
+// Hardcoded to stage — Vercel wasn't reliably inlining BUN_PUBLIC_API_URL at build time.
+const API_BASE_URL = "https://gcp-stage.plena.finance";
 const API_PREFIX = "/api/hub";
 
 interface ApiEnvelope<T> {
