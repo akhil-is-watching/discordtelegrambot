@@ -5,9 +5,9 @@ import { ApiError } from "@/lib/api/errors";
 // literal references, not `import.meta.env` or indirect access through a variable.
 // When the var isn't set at bundle time (no .env present), Bun leaves the raw
 // `process.env...` expression in the client bundle, and `process` doesn't exist in
-// the browser — so guard with `typeof process` (safe on undeclared globals) instead
-// of referencing `process` directly.
-const API_BASE_URL = process.env.BUN_PUBLIC_API_URL ?? (typeof process !== "undefined" ? process.env.BUN_PUBLIC_API_URL : undefined) ?? "";
+// the browser — so the whole expression must stay behind a `typeof process` guard
+// (safe on undeclared globals) rather than referencing `process` directly.
+const API_BASE_URL = typeof process !== "undefined" ? (process.env.BUN_PUBLIC_API_URL ?? "") : "";
 const API_PREFIX = "/api/hub";
 
 interface ApiEnvelope<T> {
