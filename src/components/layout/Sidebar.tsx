@@ -60,6 +60,7 @@ function NavLink({ item, active }: { item: NavItem; active: boolean }) {
 }
 
 function initialsFromEmail(email: string): string {
+  if (!email) return "W"; // wallet-based accounts have no email
   const local = email.split("@")[0] ?? email;
   const parts = local.split(/[._-]+/).filter(Boolean);
   if (parts.length >= 2) {
@@ -129,7 +130,7 @@ export function Sidebar() {
               {initialsFromEmail(user.email)}
             </div>
             <div className="min-w-0 flex-1">
-              <p className="truncate text-sm font-medium">{user.email}</p>
+              <p className="truncate text-sm font-medium">{user.email || "Wallet Account"}</p>
               <p className="truncate text-xs text-white/40">Signed in</p>
             </div>
             <button

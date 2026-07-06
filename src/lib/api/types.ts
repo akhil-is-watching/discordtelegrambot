@@ -7,11 +7,6 @@ export interface AuthUser {
   onboardingCompleted?: boolean;
 }
 
-export interface AuthResponse {
-  accessToken: string;
-  user: AuthUser;
-}
-
 // ---- Bots ----
 
 export type BotType = "moderator" | "secretary";

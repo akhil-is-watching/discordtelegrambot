@@ -9,8 +9,8 @@ export type AuthStatus = "loading" | "authenticated" | "unauthenticated";
 export interface AuthContextValue {
   user: AuthUser | null;
   status: AuthStatus;
-  login: (email: string, password: string) => Promise<void>;
-  register: (email: string, password: string) => Promise<void>;
+  /** Stores a wallet-login session token and loads the resulting user. */
+  loginWithToken: (accessToken: string) => Promise<void>;
   logout: () => void;
 }
 
@@ -51,16 +51,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     () => ({
       user,
       status,
-      async login(email, password) {
-        const result = await authApi.login(email, password);
-        setStoredToken(result.accessToken);
-        setUser(result.user);
-        setStatus("authenticated");
-      },
-      async register(email, password) {
-        const result = await authApi.register(email, password);
-        setStoredToken(result.accessToken);
-        setUser(result.user);
+      async loginWithToken(accessToken) {
+        setStoredToken(accessToken);
+        const me = await authApi.getMe();
+        setUser(me);
         setStatus("authenticated");
       },
       logout() {
