@@ -127,6 +127,8 @@ export interface TeamMember {
   role?: string;
   topics?: string;
   ignoreForReplies?: boolean;
+  /** Free-text routing notes for handoffs to this specific person. */
+  handoffInstructions?: string;
 }
 
 export interface CustomModerationRule {

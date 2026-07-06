@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/dialog";
 import { AddChannelModal } from "@/components/mods/AddChannelModal";
 import { ChannelConnectModal } from "@/components/mods/ChannelConnectModal";
+import { ChannelHandoffModal } from "@/components/mods/ChannelHandoffModal";
 import { deleteIntegration, retryWebhook } from "@/lib/api/integrations";
 import { ApiError } from "@/lib/api/errors";
 import type { Platform, SafeIntegration, WebhookStatus } from "@/lib/api/types";
@@ -33,6 +34,7 @@ function statusBadgeVariant(status: WebhookStatus): "success" | "warning" | "des
 export function ChannelsTab() {
   const ctx = useOutletContext<ModDetailContext>();
   const [addChannelOpen, setAddChannelOpen] = useState(false);
+  const [handoffChannel, setHandoffChannel] = useState<Platform | null>(null);
   const [connectingChannel, setConnectingChannel] = useState<Platform | null>(null);
   const [pendingDelete, setPendingDelete] = useState<SafeIntegration | null>(null);
   const [deleting, setDeleting] = useState(false);
@@ -141,17 +143,35 @@ export function ChannelsTab() {
         connectedPlatforms={connectedPlatforms}
         onPickChannel={platform => {
           setAddChannelOpen(false);
-          setConnectingChannel(platform);
+          setHandoffChannel(platform);
         }}
       />
+
+      {handoffChannel && (
+        <ChannelHandoffModal
+          botId={bot._id}
+          channelId={handoffChannel}
+          onBack={() => {
+            setHandoffChannel(null);
+            setAddChannelOpen(true);
+          }}
+          onOpenChange={open => {
+            if (!open) setHandoffChannel(null);
+          }}
+          onContinue={() => {
+            setConnectingChannel(handoffChannel);
+            setHandoffChannel(null);
+          }}
+        />
+      )}
 
       {connectingChannel && (
         <ChannelConnectModal
           botId={bot._id}
           channelId={connectingChannel}
           onBack={() => {
+            setHandoffChannel(connectingChannel);
             setConnectingChannel(null);
-            setAddChannelOpen(true);
           }}
           onOpenChange={open => {
             if (!open) setConnectingChannel(null);

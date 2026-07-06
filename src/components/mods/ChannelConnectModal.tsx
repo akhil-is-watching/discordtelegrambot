@@ -16,6 +16,7 @@ import { createIntegration } from "@/lib/api/integrations";
 import { ApiError } from "@/lib/api/errors";
 import type { CreateIntegrationResponseDto, Platform, WebhookStatus } from "@/lib/api/types";
 import { CHANNEL_META } from "@/pages/mods/channelMeta";
+import { ConnectWizardSteps } from "@/components/mods/ConnectWizardSteps";
 
 const CHANNEL_ICONS: Record<Platform, typeof Send> = {
   telegram: Send,
@@ -172,6 +173,8 @@ export function ChannelConnectModal({
           <DialogTitle>{config.label}</DialogTitle>
           <DialogDescription>{config.description}</DialogDescription>
         </DialogHeader>
+
+        <ConnectWizardSteps current="authentication" />
 
         <div className="flex flex-col gap-2">
           <Label htmlFor="bot-token">Bot Token</Label>

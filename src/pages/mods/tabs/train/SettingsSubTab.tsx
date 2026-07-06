@@ -308,35 +308,42 @@ export function SettingsSubTab() {
             )}
             <div className="flex flex-col gap-2">
               {config.teamMembers.map((member, i) => (
-                <div key={i} className="flex items-center gap-2 rounded-xl border p-2">
-                  <Input
-                    placeholder="username"
-                    value={member.username}
-                    onChange={e => updateTeamMember(i, { username: e.target.value })}
-                    className="w-32"
-                  />
-                  <Input
-                    placeholder="Role"
-                    value={member.role ?? ""}
-                    onChange={e => updateTeamMember(i, { role: e.target.value })}
-                    className="w-32"
-                  />
-                  <Input
-                    placeholder="Topics"
-                    value={member.topics ?? ""}
-                    onChange={e => updateTeamMember(i, { topics: e.target.value })}
-                    className="flex-1"
-                  />
-                  <label className="flex shrink-0 items-center gap-1.5 text-xs whitespace-nowrap">
-                    <Checkbox
-                      checked={member.ignoreForReplies !== false}
-                      onCheckedChange={checked => updateTeamMember(i, { ignoreForReplies: checked === true })}
+                <div key={i} className="flex flex-col gap-2 rounded-xl border p-2">
+                  <div className="flex items-center gap-2">
+                    <Input
+                      placeholder="username"
+                      value={member.username}
+                      onChange={e => updateTeamMember(i, { username: e.target.value })}
+                      className="w-32"
                     />
-                    Ignore
-                  </label>
-                  <Button type="button" variant="ghost" size="icon" onClick={() => removeTeamMember(i)}>
-                    <Trash2 className="size-4" />
-                  </Button>
+                    <Input
+                      placeholder="Role"
+                      value={member.role ?? ""}
+                      onChange={e => updateTeamMember(i, { role: e.target.value })}
+                      className="w-32"
+                    />
+                    <Input
+                      placeholder="Topics"
+                      value={member.topics ?? ""}
+                      onChange={e => updateTeamMember(i, { topics: e.target.value })}
+                      className="flex-1"
+                    />
+                    <label className="flex shrink-0 items-center gap-1.5 text-xs whitespace-nowrap">
+                      <Checkbox
+                        checked={member.ignoreForReplies !== false}
+                        onCheckedChange={checked => updateTeamMember(i, { ignoreForReplies: checked === true })}
+                      />
+                      Ignore
+                    </label>
+                    <Button type="button" variant="ghost" size="icon" onClick={() => removeTeamMember(i)}>
+                      <Trash2 className="size-4" />
+                    </Button>
+                  </div>
+                  <Input
+                    placeholder="Handoff instructions for this person (e.g. billing, refunds)"
+                    value={member.handoffInstructions ?? ""}
+                    onChange={e => updateTeamMember(i, { handoffInstructions: e.target.value })}
+                  />
                 </div>
               ))}
             </div>

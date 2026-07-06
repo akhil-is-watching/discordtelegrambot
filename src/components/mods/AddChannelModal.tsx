@@ -1,5 +1,6 @@
 import { Boxes, ChevronRight, MessageCircle, Send } from "lucide-react";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { ConnectWizardSteps } from "@/components/mods/ConnectWizardSteps";
 import { CHANNEL_META } from "@/pages/mods/channelMeta";
 import type { Platform } from "@/lib/api/types";
 
@@ -32,6 +33,8 @@ export function AddChannelModal({
             real time.
           </DialogDescription>
         </DialogHeader>
+
+        <ConnectWizardSteps current="connect" />
 
         <div className="flex flex-col gap-3">
           {(Object.keys(CHANNEL_META) as Platform[]).map(id => {
