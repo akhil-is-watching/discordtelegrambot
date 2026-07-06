@@ -14,6 +14,29 @@ function toBase64(bytes: Uint8Array): string {
   return btoa(binary);
 }
 
+// @solana/wallet-adapter-base's Wallet*Error classes are all thrown with no message
+// at all (e.g. `throw new WalletAccountError()`), so `err.message` is always "" —
+// fall back to a readable description keyed by `err.name` instead.
+const WALLET_ERROR_MESSAGES: Record<string, string> = {
+  WalletAccountError: "This wallet has no account available. Set one up in your wallet and try again.",
+  WalletNotReadyError: "This wallet isn't available. Make sure the extension is installed and unlocked.",
+  WalletConnectionError: "Could not connect to this wallet. Try again.",
+  WalletDisconnectedError: "The wallet disconnected before finishing. Try again.",
+  WalletTimeoutError: "The wallet didn't respond in time. Try again.",
+  WalletWindowBlockedError: "Your browser blocked the wallet popup. Allow popups for this site and try again.",
+  WalletWindowClosedError: "The wallet popup was closed before finishing.",
+  WalletSignMessageError: "This wallet couldn't sign the message. Try again.",
+};
+
+function describeWalletError(err: unknown, fallback: string): string {
+  if (err instanceof Error) {
+    const named = WALLET_ERROR_MESSAGES[err.name];
+    if (named) return named;
+    if (err.message) return err.message;
+  }
+  return fallback;
+}
+
 async function completeLogin(
   walletAddress: string,
   chain: WalletChain,
@@ -60,7 +83,9 @@ export function useWalletLogin(onToken: (accessToken: string) => Promise<void>) 
         await onToken(accessToken);
         setStatus("idle");
       } catch (err) {
-        setError(err instanceof ApiError ? err.message : "Could not sign in with this wallet.");
+        setError(
+          err instanceof ApiError ? err.message : describeWalletError(err, "Could not sign in with this wallet."),
+        );
         setStatus("error");
       } finally {
         inFlight.current = false;
@@ -86,7 +111,7 @@ export function useWalletLogin(onToken: (accessToken: string) => Promise<void>) 
         return runLogin(address, "SOLANA", async (message) => toBase64(await signMessage(new TextEncoder().encode(message))));
       })
       .catch((err) => {
-        setError(err instanceof Error ? err.message : "Could not connect to that wallet.");
+        setError(describeWalletError(err, "Could not connect to that wallet."));
         setStatus("error");
       });
     // solana's own identity changes every render; only re-run when the target wallet changes.
@@ -111,7 +136,7 @@ export function useWalletLogin(onToken: (accessToken: string) => Promise<void>) 
         const address = result.accounts[0];
         await runLogin(address, "EVM", (message) => signMessageAsync({ message, account: address }));
       } catch (err) {
-        setError(err instanceof Error ? err.message : "Could not connect to that wallet.");
+        setError(describeWalletError(err, "Could not connect to that wallet."));
         setStatus("error");
       }
     },

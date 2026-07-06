@@ -13,6 +13,13 @@ const queryClient = new QueryClient();
  * per-wallet adapters are registered — modern wallets (Phantom, Solflare, Backpack, ...)
  * self-register via the Wallet Standard, so `wallets={[]}` still picks them up.
  */
+// Without an explicit onError, WalletProvider both console.errors every wallet error
+// (even ones useWalletLogin already surfaces in the UI) and, for WalletNotReadyError
+// specifically, opens the wallet's website in a new tab — surprising, unwanted UX.
+function handleWalletError(error: Error): void {
+  console.warn("[wallet]", error.name || error.message || error);
+}
+
 export function WalletProviders({ children }: { children: ReactNode }) {
   const solanaWallets = useMemo(() => [], []);
 
@@ -20,7 +27,7 @@ export function WalletProviders({ children }: { children: ReactNode }) {
     <WagmiProvider config={wagmiConfig}>
       <QueryClientProvider client={queryClient}>
         <ConnectionProvider endpoint={SOLANA_RPC_ENDPOINT}>
-          <WalletProvider wallets={solanaWallets} autoConnect={false}>
+          <WalletProvider wallets={solanaWallets} autoConnect={false} onError={handleWalletError}>
             {children}
           </WalletProvider>
         </ConnectionProvider>
