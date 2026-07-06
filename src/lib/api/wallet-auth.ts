@@ -11,11 +11,6 @@ export interface WalletNonce {
   expiresAt: number;
 }
 
-export interface WalletLoginResult {
-  accessToken: string;
-  refreshToken?: string;
-}
-
 interface NoahAuthEnvelope<T> {
   success: boolean;
   data: T | null;
@@ -63,11 +58,12 @@ export function getWalletNonce(walletAddress: string, chain: WalletChain): Promi
   return noahAuthFetch<WalletNonce>(`/nonce?${params.toString()}`);
 }
 
+/** `data` is the raw JWT access token string itself — not wrapped in an object. */
 export function loginWithWallet(input: {
   walletAddress: string;
   signature: string;
   chain: WalletChain;
   issuedAt: string;
-}): Promise<WalletLoginResult> {
-  return noahAuthFetch<WalletLoginResult>("/login?platform=NOAH", { method: "POST", body: input });
+}): Promise<string> {
+  return noahAuthFetch<string>("/login?platform=NOAH", { method: "POST", body: input });
 }

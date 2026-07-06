@@ -56,8 +56,7 @@ async function completeLogin(
   const issuedAt = new Date().toISOString();
   const message = generateSignedMessage(walletAddress, nonce, issuedAt);
   const signature = await sign(message);
-  const { accessToken } = await loginWithWallet({ walletAddress, signature, chain, issuedAt });
-  return accessToken;
+  return loginWithWallet({ walletAddress, signature, chain, issuedAt });
 }
 
 /** Connect → fetch nonce → sign → exchange for a session token, for either chain. */
