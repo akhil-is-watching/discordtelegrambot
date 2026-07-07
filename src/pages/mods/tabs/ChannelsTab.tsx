@@ -1,4 +1,4 @@
-import { Boxes, MessageCircle, RotateCw, Send, Trash2 } from "lucide-react";
+import { Boxes, MessageCircle, RotateCw, Send, Trash2, Users } from "lucide-react";
 import { useState } from "react";
 import { useOutletContext } from "react-router-dom";
 import { toast } from "sonner";
@@ -35,6 +35,7 @@ export function ChannelsTab() {
   const ctx = useOutletContext<ModDetailContext>();
   const [addChannelOpen, setAddChannelOpen] = useState(false);
   const [handoffChannel, setHandoffChannel] = useState<Platform | null>(null);
+  const [editHandoffChannel, setEditHandoffChannel] = useState<Platform | null>(null);
   const [connectingChannel, setConnectingChannel] = useState<Platform | null>(null);
   const [pendingDelete, setPendingDelete] = useState<SafeIntegration | null>(null);
   const [deleting, setDeleting] = useState(false);
@@ -122,6 +123,14 @@ export function ChannelsTab() {
                       <RotateCw className="size-4" />
                     </Button>
                   )}
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    title="Edit team & handoff"
+                    onClick={() => setEditHandoffChannel(integration.platform)}
+                  >
+                    <Users className="size-4" />
+                  </Button>
                   <Button variant="ghost" size="icon" onClick={() => setPendingDelete(integration)}>
                     <Trash2 className="size-4" />
                   </Button>
@@ -161,6 +170,21 @@ export function ChannelsTab() {
           onContinue={() => {
             setConnectingChannel(handoffChannel);
             setHandoffChannel(null);
+          }}
+        />
+      )}
+
+      {editHandoffChannel && (
+        <ChannelHandoffModal
+          botId={bot._id}
+          channelId={editHandoffChannel}
+          mode="edit"
+          onOpenChange={open => {
+            if (!open) setEditHandoffChannel(null);
+          }}
+          onContinue={() => {
+            toast.success("Handoff settings saved");
+            setEditHandoffChannel(null);
           }}
         />
       )}

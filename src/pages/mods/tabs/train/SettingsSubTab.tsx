@@ -9,10 +9,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Switch } from "@/components/ui/switch";
-import { Textarea } from "@/components/ui/textarea";
 import { getModeratorHome, updateConfig } from "@/lib/api/moderator";
 import { ApiError } from "@/lib/api/errors";
-import type { BotTone, CustomModerationRule, ModerationRuleDef, ModeratorConfig, TeamMember } from "@/lib/api/types";
+import type { BotTone, CustomModerationRule, ModerationRuleDef, ModeratorConfig } from "@/lib/api/types";
 import type { ModDetailContext } from "@/pages/mods/useModDetail";
 
 const TONES: { value: BotTone; label: string; hint: string }[] = [
@@ -86,30 +85,13 @@ export function SettingsSubTab() {
     patch({ customModerationRules: config.customModerationRules.filter((_, i) => i !== index) });
   }
 
-  function updateTeamMember(index: number, patchMember: Partial<TeamMember>) {
-    if (!config) return;
-    const next = config.teamMembers.map((m, i) => (i === index ? { ...m, ...patchMember } : m));
-    patch({ teamMembers: next });
-  }
-
-  function addTeamMember() {
-    if (!config) return;
-    patch({ teamMembers: [...config.teamMembers, { username: "", ignoreForReplies: true }] });
-  }
-
-  function removeTeamMember(index: number) {
-    if (!config) return;
-    patch({ teamMembers: config.teamMembers.filter((_, i) => i !== index) });
-  }
-
   async function handleSave() {
     if (!config) return;
     setSaving(true);
     try {
-      const { botName: _botName, ...rest } = config;
+      const { botName: _botName, teamMembers: _teamMembers, handoffInstructions: _handoffInstructions, escalationUsername: _escalationUsername, ...rest } = config;
       const { config: saved } = await updateConfig(botId, {
         ...rest,
-        teamMembers: config.teamMembers.filter(m => m.username.trim()),
         customModerationRules: config.customModerationRules.filter(r => r.description.trim()),
       });
       setConfig(saved);
@@ -137,6 +119,12 @@ export function SettingsSubTab() {
 
   return (
     <div className="flex flex-col gap-6 pb-20">
+      <p className="text-muted-foreground -mb-2 text-sm">
+        Looking for team members, escalation contact, or handoff instructions? Those are now managed per
+        channel under the <span className="font-medium">Channels</span> tab, since Telegram and Discord
+        each have their own.
+      </p>
+
       <Card>
         <CardHeader>
           <CardTitle>Identity & tone</CardTitle>
@@ -286,91 +274,6 @@ export function SettingsSubTab() {
                 </div>
               ))}
             </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>Team & escalation</CardTitle>
-        </CardHeader>
-        <CardContent className="flex flex-col gap-5">
-          <div className="flex flex-col gap-2">
-            <div className="flex items-center justify-between">
-              <Label>Team members</Label>
-              <Button type="button" size="sm" variant="ghost" onClick={addTeamMember}>
-                <Plus className="size-4" />
-                Add
-              </Button>
-            </div>
-            {config.teamMembers.length === 0 && (
-              <p className="text-muted-foreground text-sm">No team members yet.</p>
-            )}
-            <div className="flex flex-col gap-2">
-              {config.teamMembers.map((member, i) => (
-                <div key={i} className="flex flex-col gap-2 rounded-xl border p-2">
-                  <div className="flex items-center gap-2">
-                    <Input
-                      placeholder="username"
-                      value={member.username}
-                      onChange={e => updateTeamMember(i, { username: e.target.value })}
-                      className="w-32"
-                    />
-                    <Input
-                      placeholder="Role"
-                      value={member.role ?? ""}
-                      onChange={e => updateTeamMember(i, { role: e.target.value })}
-                      className="w-32"
-                    />
-                    <Input
-                      placeholder="Topics"
-                      value={member.topics ?? ""}
-                      onChange={e => updateTeamMember(i, { topics: e.target.value })}
-                      className="flex-1"
-                    />
-                    <label className="flex shrink-0 items-center gap-1.5 text-xs whitespace-nowrap">
-                      <Checkbox
-                        checked={member.ignoreForReplies !== false}
-                        onCheckedChange={checked => updateTeamMember(i, { ignoreForReplies: checked === true })}
-                      />
-                      Ignore
-                    </label>
-                    <Button type="button" variant="ghost" size="icon" onClick={() => removeTeamMember(i)}>
-                      <Trash2 className="size-4" />
-                    </Button>
-                  </div>
-                  <Input
-                    placeholder="Handoff instructions for this person (e.g. billing, refunds)"
-                    value={member.handoffInstructions ?? ""}
-                    onChange={e => updateTeamMember(i, { handoffInstructions: e.target.value })}
-                  />
-                </div>
-              ))}
-            </div>
-          </div>
-
-          <div className="flex flex-col gap-2">
-            <Label htmlFor="escalation-username">Escalation contact</Label>
-            <Input
-              id="escalation-username"
-              placeholder="username"
-              value={config.escalationUsername}
-              onChange={e => patch({ escalationUsername: e.target.value })}
-            />
-            <p className="text-muted-foreground text-xs">
-              DM'd when the bot can't answer or a user wants to talk to a person.
-            </p>
-          </div>
-
-          <div className="flex flex-col gap-2">
-            <Label htmlFor="handoff-instructions">Handoff instructions</Label>
-            <Textarea
-              id="handoff-instructions"
-              rows={6}
-              value={config.handoffInstructions}
-              onChange={e => patch({ handoffInstructions: e.target.value })}
-              placeholder="Routing rules for who handles what (investments, partnerships, support, ...)"
-            />
           </div>
         </CardContent>
       </Card>

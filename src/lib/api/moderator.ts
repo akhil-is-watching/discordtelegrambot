@@ -4,6 +4,8 @@ import type {
   ModerationRuleDef,
   ModeratorConfig,
   ModeratorHomeResponse,
+  Platform,
+  PlatformHandoffConfig,
   PromptGenerateResult,
   PromptStudioState,
   PromptTestState,
@@ -11,14 +13,16 @@ import type {
   TestMessage,
   TestUser,
   UpdateModeratorConfigInput,
+  UpdatePlatformHandoffInput,
 } from "@/lib/api/types";
 
 const base = (botId: string) => `/bots/${botId}/moderator`;
 
 // ---- Config + rules ----
 
-export function getModeratorHome(botId: string): Promise<ModeratorHomeResponse> {
-  return apiFetch<ModeratorHomeResponse>(base(botId));
+export function getModeratorHome(botId: string, platform?: Platform): Promise<ModeratorHomeResponse> {
+  const query = platform ? `?platform=${platform}` : "";
+  return apiFetch<ModeratorHomeResponse>(`${base(botId)}${query}`);
 }
 
 export function updateConfig(
@@ -26,6 +30,14 @@ export function updateConfig(
   input: UpdateModeratorConfigInput,
 ): Promise<{ config: ModeratorConfig }> {
   return apiFetch<{ config: ModeratorConfig }>(`${base(botId)}/config`, { method: "PATCH", body: input });
+}
+
+export function updatePlatformHandoff(
+  botId: string,
+  platform: Platform,
+  input: UpdatePlatformHandoffInput,
+): Promise<{ handoff: { telegram: PlatformHandoffConfig; discord: PlatformHandoffConfig } }> {
+  return apiFetch(`${base(botId)}/handoff/${platform}`, { method: "PATCH", body: input });
 }
 
 export function getRules(botId: string): Promise<ModerationRuleDef[]> {

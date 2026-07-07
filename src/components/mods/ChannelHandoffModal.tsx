@@ -16,7 +16,7 @@ import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Textarea } from "@/components/ui/textarea";
-import { getModeratorHome, updateConfig } from "@/lib/api/moderator";
+import { getModeratorHome, updateConfig, updatePlatformHandoff } from "@/lib/api/moderator";
 import { ApiError } from "@/lib/api/errors";
 import type { Platform, TeamMember } from "@/lib/api/types";
 import { CHANNEL_META } from "@/pages/mods/channelMeta";
@@ -31,13 +31,17 @@ function emptyMember(): TeamMember {
 export function ChannelHandoffModal({
   botId,
   channelId,
+  mode = "wizard",
   onBack,
   onOpenChange,
   onContinue,
 }: {
   botId: string;
   channelId: Platform;
-  onBack: () => void;
+  /** "wizard" (default): part of the add-channel flow, shows the step header + Back button.
+   * "edit": standalone editor for an already-connected channel. */
+  mode?: "wizard" | "edit";
+  onBack?: () => void;
   onOpenChange: (open: boolean) => void;
   onContinue: () => void;
 }) {
@@ -48,18 +52,21 @@ export function ChannelHandoffModal({
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [teamMembers, setTeamMembers] = useState<TeamMember[]>([]);
+  const [handoffInstructions, setHandoffInstructions] = useState("");
   const [escalationUsername, setEscalationUsername] = useState("");
 
   useEffect(() => {
     setLoading(true);
-    getModeratorHome(botId)
+    getModeratorHome(botId, channelId)
       .then(res => {
         setTeamMembers(res.config.teamMembers.length ? res.config.teamMembers : [emptyMember()]);
-        setEscalationUsername(res.config.escalationUsername);
+        const handoff = res.handoff[channelId];
+        setHandoffInstructions(handoff.handoffInstructions);
+        setEscalationUsername(handoff.escalationUsername);
       })
       .catch(err => setError(err instanceof ApiError ? err.message : "Could not load handoff settings."))
       .finally(() => setLoading(false));
-  }, [botId]);
+  }, [botId, channelId]);
 
   function updateMember(index: number, patch: Partial<TeamMember>) {
     setTeamMembers(prev => prev.map((m, i) => (i === index ? { ...m, ...patch } : m)));
@@ -84,10 +91,10 @@ export function ChannelHandoffModal({
     setSaving(true);
     setError(null);
     try {
-      await updateConfig(botId, {
-        teamMembers: teamMembers.filter(m => m.username.trim()),
-        escalationUsername,
-      });
+      await Promise.all([
+        updateConfig(botId, { teamMembers: teamMembers.filter(m => m.username.trim()) }),
+        updatePlatformHandoff(botId, channelId, { handoffInstructions, escalationUsername }),
+      ]);
       onContinue();
     } catch (err) {
       const message = err instanceof ApiError ? err.message : "Could not save handoff settings.";
@@ -109,7 +116,7 @@ export function ChannelHandoffModal({
           <DialogDescription>{platform.description}</DialogDescription>
         </DialogHeader>
 
-        <ConnectWizardSteps current="handoff" />
+        {mode === "wizard" && <ConnectWizardSteps current="handoff" />}
 
         <div className="flex flex-col gap-1">
           <h3 className="font-semibold">Team & Handoffs on {platform.label}</h3>
@@ -195,6 +202,20 @@ export function ChannelHandoffModal({
             <Separator />
 
             <div className="flex flex-col gap-2">
+              <Label htmlFor="handoff-instructions">Handoff instructions</Label>
+              <p className="text-muted-foreground text-sm">
+                General routing rules for {platform.label} (e.g. investments, partnerships, support) — on top
+                of any per-person notes above.
+              </p>
+              <Textarea
+                id="handoff-instructions"
+                rows={4}
+                value={handoffInstructions}
+                onChange={e => setHandoffInstructions(e.target.value)}
+              />
+            </div>
+
+            <div className="flex flex-col gap-2">
               <Label htmlFor="fallback-username">Fallback (AI Unsure)</Label>
               <p className="text-muted-foreground text-sm">
                 Who the bot DMs when it doesn't know the answer and no team member above fits.
@@ -212,11 +233,17 @@ export function ChannelHandoffModal({
         {error && <p className="text-destructive text-sm">{error}</p>}
 
         <DialogFooter>
-          <Button type="button" variant="ghost" onClick={onBack}>
-            Back
-          </Button>
+          {mode === "wizard" ? (
+            <Button type="button" variant="ghost" onClick={onBack}>
+              Back
+            </Button>
+          ) : (
+            <Button type="button" variant="ghost" onClick={() => onOpenChange(false)}>
+              Cancel
+            </Button>
+          )}
           <Button type="button" className="rounded-full" disabled={loading || saving} onClick={handleContinue}>
-            {saving ? "Saving…" : "Save & Continue"}
+            {saving ? "Saving…" : mode === "wizard" ? "Save & Continue" : "Save"}
           </Button>
         </DialogFooter>
       </DialogContent>

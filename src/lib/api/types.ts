@@ -138,6 +138,8 @@ export interface ModeratorConfig {
   communityName: string;
   tone: BotTone;
   teamMembers: TeamMember[];
+  /** Flattened for whichever platform was requested (see `getModeratorHome`'s `platform` param) —
+   * read-only here. Edit via `handoff`/`updatePlatformHandoff`, not `updateConfig`. */
   handoffInstructions: string;
   escalationUsername: string;
   engagementMode: boolean;
@@ -148,7 +150,17 @@ export interface ModeratorConfig {
   allowedLinks: string;
 }
 
-export type UpdateModeratorConfigInput = Partial<Omit<ModeratorConfig, "botName">>;
+export type UpdateModeratorConfigInput = Partial<
+  Omit<ModeratorConfig, "botName" | "handoffInstructions" | "escalationUsername">
+>;
+
+/** Handoff routing text + fallback DM contact for one platform — independent per channel. */
+export interface PlatformHandoffConfig {
+  handoffInstructions: string;
+  escalationUsername: string;
+}
+
+export type UpdatePlatformHandoffInput = Partial<PlatformHandoffConfig>;
 
 export interface ModerationRuleDef {
   id: string;
@@ -165,6 +177,7 @@ export interface CompanyDocState {
 export interface ModeratorHomeResponse {
   botName: string;
   config: ModeratorConfig;
+  handoff: { telegram: PlatformHandoffConfig; discord: PlatformHandoffConfig };
   rulesCatalog: ModerationRuleDef[];
   companyDoc: { length: number; maxLength: number; updatedAt: string | null };
   promptStudio: PromptStudioState;
