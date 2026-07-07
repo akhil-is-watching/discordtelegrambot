@@ -137,9 +137,9 @@ export interface ModeratorConfig {
   botName: string;
   communityName: string;
   tone: BotTone;
-  teamMembers: TeamMember[];
   /** Flattened for whichever platform was requested (see `getModeratorHome`'s `platform` param) —
    * read-only here. Edit via `handoff`/`updatePlatformHandoff`, not `updateConfig`. */
+  teamMembers: TeamMember[];
   handoffInstructions: string;
   escalationUsername: string;
   engagementMode: boolean;
@@ -151,11 +151,14 @@ export interface ModeratorConfig {
 }
 
 export type UpdateModeratorConfigInput = Partial<
-  Omit<ModeratorConfig, "botName" | "handoffInstructions" | "escalationUsername">
+  Omit<ModeratorConfig, "botName" | "teamMembers" | "handoffInstructions" | "escalationUsername">
 >;
 
-/** Handoff routing text + fallback DM contact for one platform — independent per channel. */
+/** Team roster + handoff routing text + fallback DM contact for one platform —
+ * independent per channel, since Telegram usernames and Discord user IDs are
+ * different formats. */
 export interface PlatformHandoffConfig {
+  teamMembers: TeamMember[];
   handoffInstructions: string;
   escalationUsername: string;
 }

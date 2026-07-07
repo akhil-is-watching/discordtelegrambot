@@ -16,7 +16,7 @@ import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Textarea } from "@/components/ui/textarea";
-import { getModeratorHome, updateConfig, updatePlatformHandoff } from "@/lib/api/moderator";
+import { getModeratorHome, updatePlatformHandoff } from "@/lib/api/moderator";
 import { ApiError } from "@/lib/api/errors";
 import type { Platform, TeamMember } from "@/lib/api/types";
 import { CHANNEL_META } from "@/pages/mods/channelMeta";
@@ -59,8 +59,8 @@ export function ChannelHandoffModal({
     setLoading(true);
     getModeratorHome(botId, channelId)
       .then(res => {
-        setTeamMembers(res.config.teamMembers.length ? res.config.teamMembers : [emptyMember()]);
         const handoff = res.handoff[channelId];
+        setTeamMembers(handoff.teamMembers.length ? handoff.teamMembers : [emptyMember()]);
         setHandoffInstructions(handoff.handoffInstructions);
         setEscalationUsername(handoff.escalationUsername);
       })
@@ -91,10 +91,11 @@ export function ChannelHandoffModal({
     setSaving(true);
     setError(null);
     try {
-      await Promise.all([
-        updateConfig(botId, { teamMembers: teamMembers.filter(m => m.username.trim()) }),
-        updatePlatformHandoff(botId, channelId, { handoffInstructions, escalationUsername }),
-      ]);
+      await updatePlatformHandoff(botId, channelId, {
+        teamMembers: teamMembers.filter(m => m.username.trim()),
+        handoffInstructions,
+        escalationUsername,
+      });
       onContinue();
     } catch (err) {
       const message = err instanceof ApiError ? err.message : "Could not save handoff settings.";
